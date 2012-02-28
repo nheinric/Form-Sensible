@@ -52,7 +52,7 @@ around 'validate' => sub {
     }
 
     if ($self->value !~ $regex ) {
-        push @errors, "_FIELDNAME_ is not a number";
+        return "_FIELDNAME_ is not a number";
     }
 
     if (defined($self->lower_bound) && $self->value < $self->lower_bound) {
