@@ -240,6 +240,24 @@ sub get_fields {
     return @active_fields;   
 }
 
+## Returns an array of all fields in this form, as well as any SubForms,
+## WARNING/TODO: If you somehow managed to add this form to a nested SubForm,
+##  calling this method will result in infinite recursion.
+sub get_all_fields {
+    my $self = shift;
+
+    my @fields = $self->get_fields;
+
+    for ( my $i = 0; $i <= $#fields; $i++ ) {
+        my $field = $fields[$i];
+        if ( $field->isa('Form::Sensible::Field::SubForm') ) {
+            my @subfields = $field->form->get_all_fields;
+            splice @fields, $i, 1, @subfields;
+        }
+    }
+
+    return @fields;
+}
 
 ## returns the fieldnames in the current form in their presentation order
 sub fieldnames {
@@ -299,9 +317,10 @@ sub render {
 sub set_values {
     my ($self, $values) = @_;
     
-    foreach my $fieldname ( $self->fieldnames ) {
-        if (exists($values->{$fieldname})) {
-            $self->field($fieldname)->value($values->{$fieldname});
+    foreach my $field ( $self->get_all_fields ) {
+        my $field_name = $field->name;
+        if ( exists($values->{$field_name}) ) {
+            $field->value( $values->{$field_name} );
         }
     }
 }
@@ -310,8 +329,8 @@ sub get_all_values {
     my $self = shift;
     
     my $value_hash = {};
-    foreach my $fieldname ( $self->fieldnames ) {
-        $value_hash->{$fieldname} = $self->field($fieldname)->value();
+    foreach my $field ( $self->get_all_fields ) {
+        $value_hash->{$field->name} = $field->value();
     }
     return $value_hash;
 }
@@ -536,6 +555,17 @@ false for a given field, it will be excluded from the results of C<get_fields()>
 B<NOTE:> When performing any action on all fields in a form, you should use this method 
 to ensure that any fields that should not be processed are excluded. 
 
+=item C<get_all_fields()>
+
+Recursively calls L<get_fields> on this form and any embedded
+L<Form::Sensible::Field::SubForm>s to build a list of all fields in the entire
+form.
+
+Note that C<SubForm> fields will not be listed. If you want a list of
+C<SubForm> fields, see L<get_fields>.
+
+See L<get_all_values>.
+
 =item C<fieldnames()>
 
 Returns an array of all the fieldnames in the current form.  Order is not guaranteed, if you 
@@ -547,9 +577,17 @@ Uses the hashref C<$values> to set the value for each field in the form. This
 is a shortcut routine only and is functionally equivalent to calling 
 C<< $field->value( $values->{$fieldname} ) >> for each value in the form.
 
+You can set values for fields in embedded L<Form::Sensible::Field::SubForm>s
+in the same manner as any other field.
+
+See L<get_all_fields> and L<get_all_values>.
+
 =item C<get_all_values()>
 
 Retrieves the current values for each field in the form and returns them in a hashref.
+
+Values for all fields embedded in L<Form::Sensible::Field::SubForm>s will be
+flattened into the hashref as C<SubForm>s do not have a value of their own.
 
 =item C<clear_state()>
 
