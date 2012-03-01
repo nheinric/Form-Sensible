@@ -20,6 +20,7 @@ my $form = Form::Sensible->create_form( {
                                                              field_class => 'Number',
                                                              name => 'numeric_integer',
                                                              integer_only => 1,
+                                                             lower_bound => -10,
                                                          },
                                                          { 
                                                             field_class => 'Number',
@@ -137,5 +138,15 @@ $form->set_values({
 $validation_result = $form->validate();
 
 like( $validation_result->error_fields->{numeric_step}[0], qr/minimum allowed value/,  "Number field value is invalid: under minimum value");
+
+## fail on NaN
+$form->set_values({
+    numeric_integer => "not a number"
+    });
+
+$validation_result = $form->validate();
+
+like( $validation_result->error_fields->{numeric_integer}[0], qr/is not a number/,  "Number field value is invalid: not a number");
+
 
 done_testing();
