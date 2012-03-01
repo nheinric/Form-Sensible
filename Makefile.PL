@@ -18,6 +18,7 @@ requires        'File::ShareDir';
 requires        'FindBin';
 test_requires   'Test::More'  => '0.42';
 #test_requires   'HTML::Tree'  => '3.23';
+test_requires   'Cache::FastMmap';
 install_share   'share';
 no_index        'directory'   => 'examples';
 # Perhaps we will use this to create command-line based form generators... another day.

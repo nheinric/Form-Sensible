@@ -71,18 +71,17 @@ has 'value_delegate' => (
     required    => 1,
     default     => sub {
                             my $self = shift;
-                            my $value = $self->default_value;
+                            $self->{_value} = $self->default_value;
                             my $sub =  sub {
                                                       my $caller = shift;
-
                                                       if ($#_ > -1) {
                                                           if (ref($_[0]) eq 'ARRAY' && !($caller->accepts_multiple)) {
-                                                              $value = $_[0]->[0];
+                                                              $caller->{_value} = $_[0]->[0];
                                                           } else {
-                                                              $value = $_[0];
+                                                              $caller->{_value} = $_[0];
                                                           }
                                                       }
-                                                      return $value;
+                                                      return $caller->{_value};
                                                   };
                             return FSConnector($sub);
                    },
